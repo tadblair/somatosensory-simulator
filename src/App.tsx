@@ -341,26 +341,17 @@ export default function App() {
 
       let effectiveShouldBlockALSC = (isAnterolateral || isSpinocerebellar) && isRelevantLevel;
       let effectiveShouldBlockDCML = isDorsalColumn && injurySide === 'bilat' && isRelevantLevel;
-      let forceBlockBothSides = false;
 
-      // Special refinement for unilateral injuries at C7 and L4/L2
-      if (injurySide !== 'bilat' && isAnterolateral) {
-        if (injuryLevel === 'C7') {
-          if (isLegSignal) {
-            forceBlockBothSides = true; // Block both leg nociceptive pathways at C7
-          } else {
-            effectiveShouldBlockALSC = false; // Permit contralateral arm AL track
-          }
-        } else if (injuryLevel === 'L4' || injuryLevel === 'L2') {
-          effectiveShouldBlockALSC = false; // Permit contralateral leg nociceptive pathway
-        }
+      // Special refinement for unilateral injuries at C7
+      if (injurySide !== 'bilat' && isAnterolateral && injuryLevel === 'C7' && !isLegSignal) {
+        effectiveShouldBlockALSC = false; // Permit contralateral arm AL track
       }
 
       if (effectiveShouldBlockALSC || effectiveShouldBlockDCML) {
         const newPoints: { x: number; y: number }[] = [];
         for (let i = 0; i < raw.length; i++) {
           const pt = raw[i];
-          const isPointOnInjuredSide = forceBlockBothSides || injurySide === 'bilat' || (injurySide === 'left' ? pt.x < 500 : pt.x > 500);
+          const isPointOnInjuredSide = injurySide === 'bilat' || (injurySide === 'left' ? pt.x < 500 : pt.x > 500);
           
           if (isPointOnInjuredSide && pt.y <= blockY) {
              // Terminate at blockY if crossing from below
